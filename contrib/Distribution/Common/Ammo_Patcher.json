@@ -1,0 +1,27 @@
+{
+    "Logging": {
+        "LogLevel": 2
+    },
+    "AMMO": {
+        "enablePatch": true,
+        "Arrow": {
+            "arrowGravity": 0.0,
+            "arrowSpeed": 9000.0
+        },
+        "Bolt": {
+            "boltGravity": 0.0,
+            "boltSpeed": 10800.0
+        }
+    },
+    "InfiniteArrow": false,
+    "LimitArrowSpeed": {
+        "Enable": false,
+        "arrowSpeedMin": 3000.0,
+        "arrowSpeedMax": 12000.0
+    },
+    "LimitBoltSpeed": {
+        "Enable": false,
+        "boltSpeedMin": 4000.0,
+        "boltSpeedMax": 12000.0
+    }
+}
