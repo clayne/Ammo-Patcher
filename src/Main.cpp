@@ -7,20 +7,32 @@ using namespace SKSE::log;
 using namespace SKSE::stl;
 
 namespace AP {
-    int logLevelint;
+    std::string logLevelStr;
     spdlog::level::level_enum logLevel = spdlog::level::trace;
     bool decision_ammo_patch;
     bool infinite_arrows;
-    bool set_arrow_speed_limit;
-    bool set_bolt_speed_limit;
-    float arrow_limiter_min;
-    float arrow_limiter_max;
-    float bolt_limiter_min;
-    float bolt_limiter_max;
+    bool limitArrowSpeed;
+    bool limitBoltSpeed;
+    float arrow_speed_limiter_min;
+    float arrow_speed_limiter_max;
+    float bolt_speed_limiter_min;
+    float bolt_speed_limiter_max;
     float arrowSpeed;
     float arrowGravity;
     float boltSpeed;
     float boltGravity;
+    bool changeArrowSoundLevel;
+    bool changeBoltSoundLevel;
+    std::string arrowSoundLevelStr;
+    std::string boltSoundLevelStr;
+    RE::SOUND_LEVEL arrowSoundLevel;
+    RE::SOUND_LEVEL boltSoundLevel;
+    bool limitArrowDamage;
+    bool limitBoltDamage;
+    float arrow_damage_limiter_min;
+    float arrow_damage_limiter_max;
+    float bolt_damage_limiter_min;
+    float bolt_damage_limiter_max;
 
     /**
      * Setup logging.
@@ -75,37 +87,52 @@ namespace AP {
 
                 if (!(ammo->GetRuntimeData().data.flags & RE::AMMO_DATA::Flag::kNonPlayable)) {
                     log::debug(
+                        "**********************************************************************************************"
+                        "********************************");
+                    log::debug(
                         "Before Patching : Name:{}|FormID:{:08X}|Damage:{} ,Projectile Name:{}|Projectile "
-                        "FormID:{:08X}|Projectile Speed:{}|Projectile Gravity:{} ",
+                        "FormID:{:08X}|Projectile Speed:{}|Projectile Gravity:{}",
                         ammo->GetFullName(), ammo->GetRawFormID(), ammo->GetRuntimeData().data.damage,
                         ammo->GetRuntimeData().data.projectile->GetFullName(),
                         ammo->GetRuntimeData().data.projectile->GetRawFormID(),
                         ammo->GetRuntimeData().data.projectile->data.speed,
                         ammo->GetRuntimeData().data.projectile->data.gravity);
-                    if (ammo->GetRuntimeData().data.flags & RE::AMMO_DATA::Flag::kNonBolt) {  // arrow
-                        ammo->GetRuntimeData().data.projectile->data.speed =
-                            limitFloat(arrowSpeed, arrow_limiter_min, arrow_limiter_max, set_arrow_speed_limit);
-                        ammo->GetRuntimeData().data.projectile->data.gravity = arrowGravity;
+                    if (ammo->GetRuntimeData().data.flags & RE::AMMO_DATA::Flag::kNonBolt) {  // for arrow
+                        ammo->GetRuntimeData().data.projectile->data.speed = limitFloat(
+                            arrowSpeed, arrow_speed_limiter_min, arrow_speed_limiter_max, limitArrowSpeed);  // speed
+                        ammo->GetRuntimeData().data.projectile->data.gravity = arrowGravity;                 // gravity
+                        ammo->GetRuntimeData().data.projectile->soundLevel = arrowSoundLevel;  // sound level
+                        ammo->GetRuntimeData().data.damage =
+                            limitFloat(ammo->GetRuntimeData().data.damage, arrow_damage_limiter_min,
+                                       arrow_damage_limiter_max, limitArrowDamage);  // damage
                         ammo_patched = true;
                     }
-                    if (!(ammo->GetRuntimeData().data.flags & RE::AMMO_DATA::Flag::kNonBolt)) {  // bolt
-                        ammo->GetRuntimeData().data.projectile->data.speed =
-                            limitFloat(boltSpeed, bolt_limiter_min, bolt_limiter_max, set_bolt_speed_limit);
-                        ammo->GetRuntimeData().data.projectile->data.gravity = boltGravity;
+                    if (!(ammo->GetRuntimeData().data.flags & RE::AMMO_DATA::Flag::kNonBolt)) {  // for bolt
+                        ammo->GetRuntimeData().data.projectile->data.speed = limitFloat(
+                            boltSpeed, bolt_speed_limiter_min, bolt_speed_limiter_max, limitBoltSpeed);  // speed
+                        ammo->GetRuntimeData().data.projectile->data.gravity = boltGravity;              // gravity
+                        ammo->GetRuntimeData().data.projectile->soundLevel = boltSoundLevel;             // sound level
+                        ammo->GetRuntimeData().data.damage =
+                            limitFloat(ammo->GetRuntimeData().data.damage, bolt_damage_limiter_min,
+                                       bolt_damage_limiter_max, limitBoltDamage);  // damage
                         ammo_patched = true;
                     }
 
                     if (ammo_patched) {
                         log::debug(
                             "After Patching : Name:{}|FormID:{:08X}|Damage:{} ,Projectile Name:{}|Projectile "
-                            "FormID:{:08X}|Projectile Speed:{}|Projectile Gravity:{} ",
+                            "FormID:{:08X}|Projectile Speed:{}|Projectile Gravity:{}",
                             ammo->GetFullName(), ammo->GetRawFormID(), ammo->GetRuntimeData().data.damage,
                             ammo->GetRuntimeData().data.projectile->GetFullName(),
                             ammo->GetRuntimeData().data.projectile->GetRawFormID(),
                             ammo->GetRuntimeData().data.projectile->data.speed,
                             ammo->GetRuntimeData().data.projectile->data.gravity);
+                        log::debug(
+                            "******************************************************************************************"
+                            "************************************");
                     }
                 }
+                // ammo->GetRuntimeData().data.projectile->soundLevel = RE::SOUND_LEVEL::kLoud;
             }
         }
         log::info("{} {} has finished Patching", PluginDeclaration::GetSingleton()->GetName(),
@@ -138,40 +165,90 @@ namespace AP {
         std::ifstream jsonfile(R"(Data\SKSE\Plugins\Ammo_Patcher.json)");
         json jsonData = json::parse(jsonfile);
 
-        logLevelint = jsonData["Logging"]["LogLevel"].get<int>();
+        logLevelStr = jsonData["Logging"]["LogLevel"].get<std::string>();
 
-        if (logLevelint == 0) {
+        if (logLevelStr == "trace") {
             logLevel = spdlog::level::trace;
-        } else if (logLevelint == 1) {
+        } else if (logLevelStr == "debug") {
             logLevel = spdlog::level::debug;
-        } else if (logLevelint == 2) {
+        } else if (logLevelStr == "info") {
             logLevel = spdlog::level::info;
-        } else if (logLevelint == 3) {
+        } else if (logLevelStr == "warn") {
             logLevel = spdlog::level::warn;
-        } else if (logLevelint == 4) {
+        } else if (logLevelStr == "err") {
             logLevel = spdlog::level::err;
-        } else if (logLevelint == 5) {
+        } else if (logLevelStr == "critical") {
             logLevel = spdlog::level::critical;
         } else {
             // Default to info if the specified log level is invalid
+            log::critical("Invalid log level specified in the JSON file. Defaulting to info level.");
             logLevel = spdlog::level::info;
         }
 
-        if (infinite_arrows = jsonData["InfiniteArrow"].get<bool>()) {
-            log::info("Infinite Arrows Activated");
-        }
-        if (decision_ammo_patch = jsonData["AMMO"]["enablePatch"].get<bool>()) {
-            arrowGravity = jsonData["AMMO"]["Arrow"]["arrowGravity"].get<float>();
-            arrowSpeed = jsonData["AMMO"]["Arrow"]["arrowSpeed"].get<float>();
-            boltGravity = jsonData["AMMO"]["Bolt"]["boltGravity"].get<float>();
-            boltSpeed = jsonData["AMMO"]["Bolt"]["boltSpeed"].get<float>();
-            if (set_arrow_speed_limit = jsonData["LimitArrowSpeed"]["Enable"].get<bool>()) {
-                arrow_limiter_min = jsonData["LimitArrowSpeed"]["arrowSpeedMin"].get<float>();
-                arrow_limiter_max = jsonData["LimitArrowSpeed"]["arrowSpeedMax"].get<float>();
+        if (decision_ammo_patch = jsonData["AMMO"]["Enable Patch"].get<bool>()) {
+            if (changeArrowSoundLevel =
+                    jsonData["AMMO"]["Arrow"]["Sound"]["Change Sound Level"]["Enable"].get<bool>()) {
+                arrowSoundLevelStr =
+                    jsonData["AMMO"]["Arrow"]["Sound"]["Change Sound Level"]["Sound Level"].get<std::string>();
             }
-            if (set_bolt_speed_limit = jsonData["LimitBoltSpeed"]["Enable"].get<bool>()) {
-                bolt_limiter_min = jsonData["LimitBoltSpeed"]["boltSpeedMin"].get<float>();
-                bolt_limiter_max = jsonData["LimitBoltSpeed"]["boltSpeedMax"].get<float>();
+
+            if (changeBoltSoundLevel = jsonData["AMMO"]["Bolt"]["Sound"]["Change Sound Level"]["Enable"].get<bool>()) {
+                boltSoundLevelStr =
+                    jsonData["AMMO"]["Bolt"]["Sound"]["Change Sound Level"]["Sound Level"].get<std::string>();
+            }
+
+            if (arrowSoundLevelStr == "kLoud") {
+                arrowSoundLevel = RE::SOUND_LEVEL::kLoud;
+            } else if (arrowSoundLevelStr == "kNormal") {
+                arrowSoundLevel = RE::SOUND_LEVEL::kNormal;
+            } else if (arrowSoundLevelStr == "kSilent") {
+                arrowSoundLevel = RE::SOUND_LEVEL::kSilent;
+            } else if (arrowSoundLevelStr == "kVeryLoud") {
+                arrowSoundLevel = RE::SOUND_LEVEL::kVeryLoud;
+            } else if (arrowSoundLevelStr == "kQuiet") {
+                arrowSoundLevel = RE::SOUND_LEVEL::kQuiet;
+            } else {
+                log::critical("Invalid Arrow Sound Level specified in the JSON file. Defaulting to kSilent.");
+                arrowSoundLevel = RE::SOUND_LEVEL::kSilent;
+            }
+
+            if (boltSoundLevelStr == "kLoud") {
+                boltSoundLevel = RE::SOUND_LEVEL::kLoud;
+            } else if (boltSoundLevelStr == "kNormal") {
+                boltSoundLevel = RE::SOUND_LEVEL::kNormal;
+            } else if (boltSoundLevelStr == "kSilent") {
+                boltSoundLevel = RE::SOUND_LEVEL::kSilent;
+            } else if (boltSoundLevelStr == "kVeryLoud") {
+                boltSoundLevel = RE::SOUND_LEVEL::kVeryLoud;
+            } else if (boltSoundLevelStr == "kQuiet") {
+                boltSoundLevel = RE::SOUND_LEVEL::kQuiet;
+            } else {
+                log::critical("Invalid Bolt Sound Level specified in the JSON file. Defaulting to kSilent.");
+                boltSoundLevel = RE::SOUND_LEVEL::kSilent;
+            }
+
+            if (infinite_arrows = jsonData["AMMO"]["Arrow"]["Infinite Arrow"].get<bool>()) {
+                log::info("Infinite Arrows Activated");
+            }
+            arrowGravity = jsonData["AMMO"]["Arrow"]["Gravity"].get<float>();
+            arrowSpeed = jsonData["AMMO"]["Arrow"]["Speed"].get<float>();
+            boltGravity = jsonData["AMMO"]["Bolt"]["Gravity"].get<float>();
+            boltSpeed = jsonData["AMMO"]["Bolt"]["Speed"].get<float>();
+            if (limitArrowSpeed = jsonData["AMMO"]["Arrow"]["Limit Speed"]["Enable"].get<bool>()) {
+                arrow_speed_limiter_min = jsonData["AMMO"]["Arrow"]["Limit Speed"]["Min"].get<float>();
+                arrow_speed_limiter_max = jsonData["AMMO"]["Arrow"]["Limit Speed"]["Max"].get<float>();
+            }
+            if (limitBoltSpeed = jsonData["AMMO"]["Bolt"]["Limit Speed"]["Enable"].get<bool>()) {
+                bolt_speed_limiter_min = jsonData["AMMO"]["Bolt"]["Limit Speed"]["Mix"].get<float>();
+                bolt_speed_limiter_max = jsonData["AMMO"]["Bolt"]["Limit Speed"]["Max"].get<float>();
+            }
+            if (limitArrowDamage = jsonData["AMMO"]["Arrow"]["Limit Damage"]["Enable"].get<bool>()) {
+                arrow_damage_limiter_min = jsonData["AMMO"]["Arrow"]["Limit Damage"]["Min"].get<float>();
+                arrow_damage_limiter_max = jsonData["AMMO"]["Arrow"]["Limit Damage"]["Max"].get<float>();
+            }
+            if (limitBoltDamage = jsonData["AMMO"]["Bolt"]["Limit Damage"]["Enable"].get<bool>()) {
+                bolt_damage_limiter_min = jsonData["AMMO"]["Bolt"]["Limit Damage"]["Mix"].get<float>();
+                bolt_damage_limiter_max = jsonData["AMMO"]["Bolt"]["Limit Damage"]["Max"].get<float>();
             }
         }
 
@@ -180,18 +257,32 @@ namespace AP {
         log::debug("*************************************************");
         log::debug("Infinite Arrow's : {}", infinite_arrows);
         log::debug("*************************************************");
-        log::debug("Set Arrow Speed Limit : {}", set_arrow_speed_limit);
-        log::debug("Set Bolt Speed Limit : {}", set_bolt_speed_limit);
+        log::debug("Final Arrow Gravity : {}", arrowGravity);
+        log::debug("Final Bolt Gravity : {}", boltGravity);
         log::debug("*************************************************");
-        log::debug("Arrow Minimum Speed : {}", arrow_limiter_min);
-        log::debug("Arrow Maximum Speed : {}", arrow_limiter_max);
-        log::debug("Actual Arrow Speed : {}", arrowSpeed);
-        log::debug("Actual Arrow Gravity : {}", arrowGravity);
+        log::debug("Set Arrow Speed Limit : {}", limitArrowSpeed);
+        log::debug("Arrow Minimum Speed Limit : {}", arrow_speed_limiter_min);
+        log::debug("Arrow Maximum Speed Limit : {}", arrow_speed_limiter_max);
+        log::debug("Final Arrow Speed : {}", arrowSpeed);
         log::debug("*************************************************");
-        log::debug("Bolt Minimum Speed : {}", bolt_limiter_min);
-        log::debug("Bolt Maximum Speed : {}", bolt_limiter_max);
-        log::debug("Actual Bolt Speed : {}", boltSpeed);
-        log::debug("Actual Bolt Gravity : {}", boltGravity);
+        log::debug("Set Bolt Speed Limit : {}", limitBoltSpeed);
+        log::debug("Bolt Minimum Speed Limit : {}", bolt_speed_limiter_min);
+        log::debug("Bolt Maximum Speed Limit : {}", bolt_speed_limiter_max);
+        log::debug("Final Bolt Speed : {}", boltSpeed);
+        log::debug("*************************************************");
+        log::debug("Change Arrow Sound Level : {}", changeArrowSoundLevel);
+        log::debug("Arrow Sound Level : {}", arrowSoundLevelStr);
+        log::debug("*************************************************");
+        log::debug("Change Bolt Sound Level : {}", changeBoltSoundLevel);
+        log::debug("Final Bolt Sound Level : {}", boltSoundLevelStr);
+        log::debug("*************************************************");
+        log::debug("Set Arrow Damage Limit : {}", limitArrowDamage);
+        log::debug("Arrow Minimum Damage Limit : {}", arrow_damage_limiter_min);
+        log::debug("Arrow Maximum Damage Limit : {}", arrow_damage_limiter_max);
+        log::debug("*************************************************");
+        log::debug("Set Bolt Damage Limit : {}", limitBoltDamage);
+        log::debug("Bolt Minimum Damage Limit : {}", bolt_damage_limiter_min);
+        log::debug("Bolt Maximum Damage Limit : {}", bolt_damage_limiter_max);
         log::debug("*************************************************");
         log::info("finished loading {}.json", PluginDeclaration::GetSingleton()->GetName());
     }

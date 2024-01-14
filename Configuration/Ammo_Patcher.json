@@ -1,27 +1,49 @@
 {
     "Logging": {
-        "LogLevel": 2
+        "LogLevel": "info"
     },
     "AMMO": {
-        "enablePatch": true,
+        "Enable Patch": false,
         "Arrow": {
-            "arrowGravity": 0.0,
-            "arrowSpeed": 9000.0
+            "Gravity": 0.0,
+            "Speed": 9000.0,
+            "Limit Speed": {
+                "Enable": false,
+                "Min": 3000.0,
+                "Max": 12000.0
+            },
+            "Limit Damage": {
+                "Enable": false,
+                "Min": 10,
+                "Max": 1000
+            },
+            "Sound": {
+                "Change Sound Level": {
+                    "Enable": false,
+                    "Sound Level": "kSilent"
+                }
+            },
+            "Infinite Arrow": false
         },
         "Bolt": {
-            "boltGravity": 0.0,
-            "boltSpeed": 10800.0
+            "Gravity": 0.0,
+            "Speed": 10800.0,
+            "Limit Speed": {
+                "Enable": false,
+                "Min": 4000.0,
+                "Max": 12000.0
+            },
+            "Limit Damage": {
+                "Enable": false,
+                "Min": 10,
+                "Max": 1000
+            },
+            "Sound": {
+                "Change Sound Level": {
+                    "Enable": false,
+                    "Sound Level": "kSilent"
+                }
+            }
         }
-    },
-    "InfiniteArrow": false,
-    "LimitArrowSpeed": {
-        "Enable": false,
-        "arrowSpeedMin": 3000.0,
-        "arrowSpeedMax": 12000.0
-    },
-    "LimitBoltSpeed": {
-        "Enable": false,
-        "boltSpeedMin": 4000.0,
-        "boltSpeedMax": 12000.0
     }
 }
