@@ -34,10 +34,10 @@ git clone https://github.com/JudahJL/Ammo-Patcher.git
 
 ## Build Instructions
 If you are using [Visual Studio Code](https://code.visualstudio.com/0), Select A Build Preset and Click Build. There are 4 Build Presets
-- Debug : Purely Debugging, No Optimizations. Highly Recomended For Release Purposes.
-- Release : Highly Optimized, No Debugging. Highly Recomended For Debugging Purposes.
-- RelWithDebInfo : Partly Optimized, Partly Debugging.
-- MinSizeRel : Focus on Size rather than Optimizations. is Still Optimized.
+- Debug : Purely Debugging, No Optimizations. Highly Recomended For Debugging.
+- Release : Highly Optimized, No Debugging. Highly Recomended For Release.
+- RelWithDebInfo : Partly Optimized, Partly for Debugging.
+- MinSizeRel : Focus on Smaller Size rather than Optimizations. is Still Optimized.
 
 ## Extra
 - The a.h and s.h header files in include directory are for extracting offsets of addresses of the game from Address Liabrary. It is of no relevance to this Project.
