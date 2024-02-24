@@ -5,7 +5,7 @@ message("Using toolchain file ${CMAKE_TOOLCHAIN_FILE}.")
 ########################################################################################################################
 project(
         Ammo_Patcher
-        VERSION 1.0.0.1
+        VERSION 1.0.0.2
         DESCRIPTION "A simple SKSE plugin built with CommonLibSSE to patch AMMO"
         LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
@@ -103,21 +103,22 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
                     set(BUILD_NAME "MinSizeRel")
 endif()
 message("Build Type : ${CMAKE_BUILD_TYPE}")
+
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin${BUILD_NAME}/")
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin - ${BUILD_NAME}/")
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin${BUILD_NAME}/")
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin - ${BUILD_NAME}/")
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/Configuration/${PROJECT_NAME}.json" "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Common")
 if(${CMAKE_BUILD_TYPE} STREQUAL Debug OR ${CMAKE_BUILD_TYPE} STREQUAL RelWithDebInfo)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PDB_FILE:${PROJECT_NAME}> "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin${BUILD_NAME}/")
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PDB_FILE:${PROJECT_NAME}> "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin - ${BUILD_NAME}/")
 endif()
-file(GLOB_RECURSE OUTPUT_DLLS "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin${BUILD_NAME}/${PROJECT_NAME}.dll")
+file(GLOB_RECURSE OUTPUT_DLLS "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin - ${BUILD_NAME}/${PROJECT_NAME}.dll")
 if(${CMAKE_BUILD_TYPE} STREQUAL Debug OR ${CMAKE_BUILD_TYPE} STREQUAL RelWithDebInfo)
-    file(GLOB_RECURSE OUTPUT_PDBS "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin${BUILD_NAME}/${PROJECT_NAME}.pdb")
+    file(GLOB_RECURSE OUTPUT_PDBS "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin - ${BUILD_NAME}/${PROJECT_NAME}.pdb")
 endif()
-file(GLOB_RECURSE OUTPUT_JSONS "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin${BUILD_NAME}/${PROJECT_NAME}.json")
+file(GLOB_RECURSE OUTPUT_JSONS "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Common/${PROJECT_NAME}.json")
 set_property(TARGET ${PROJECT_NAME}
         APPEND PROPERTY ADDITIONAL_CLEAN_FILES "${OUTPUT_DLLS}")
 if(${CMAKE_BUILD_TYPE} STREQUAL Debug OR ${CMAKE_BUILD_TYPE} STREQUAL RelWithDebInfo)
@@ -131,13 +132,17 @@ set_property(TARGET ${PROJECT_NAME}
 foreach (DEPLOY_TARGET $ENV{SkyrimPluginTargets})    #set your "SkyrimPluginTargets" environment variable to your MO2's Mods Folder
         message("Adding deployment target ${DEPLOY_TARGET}.")
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_TARGET}/${PROJECT_NAME}${CMAKE_BUILD_TYPE}/SKSE/Plugins/")
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_TARGET}/${PROJECT_NAME} - ${CMAKE_BUILD_TYPE}/SKSE/Plugins/")
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> "${DEPLOY_TARGET}/${PROJECT_NAME}${CMAKE_BUILD_TYPE}/SKSE/Plugins/")
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> "${DEPLOY_TARGET}/${PROJECT_NAME} - ${CMAKE_BUILD_TYPE}/SKSE/Plugins/")
         if(${CMAKE_BUILD_TYPE} STREQUAL Debug OR ${CMAKE_BUILD_TYPE} STREQUAL RelWithDebInfo)
                 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PDB_FILE:${PROJECT_NAME}> "${DEPLOY_TARGET}/${PROJECT_NAME}${CMAKE_BUILD_TYPE}/SKSE/Plugins/")
+                    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PDB_FILE:${PROJECT_NAME}> "${DEPLOY_TARGET}/${PROJECT_NAME} - ${CMAKE_BUILD_TYPE}/SKSE/Plugins/")
         endif()
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/Configuration/${PROJECT_NAME}.json" "${DEPLOY_TARGET}/${PROJECT_NAME}${CMAKE_BUILD_TYPE}/SKSE/Plugins/")
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/Configuration/${PROJECT_NAME}.json" "${DEPLOY_TARGET}/${PROJECT_NAME} - ${CMAKE_BUILD_TYPE}/SKSE/Plugins/")
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_TARGET}/Common For ${PROJECT_NAME}/SKSE/Plugins/")
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/Configuration/My Config/${PROJECT_NAME}.json" "${DEPLOY_TARGET}/Common For ${PROJECT_NAME}/SKSE/Plugins/")
 endforeach()
