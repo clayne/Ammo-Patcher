@@ -1,6 +1,6 @@
 {
     "name": "ammopatcher",
-    "version-string": "1.0.0.1",
+    "version-string": "1.0.0.2",
     "port-version": 0,
     "description": "A simple SKSE plugin to patch AMMO",
     "homepage": "https://www.skyrimng.com",
