@@ -40,7 +40,7 @@ If you are using [Visual Studio Code](https://code.visualstudio.com/0), Select A
 - MinSizeRel : Focus on Smaller Size rather than Optimizations. is Still Optimized.
 
 ## Extra
-- The a.h and s.h header files in include directory are for extracting offsets of addresses of the game from Address Liabrary. It is of no relevance to this Project.
+- The a.h and s.h header files in include directory are for extracting offsets of addresses of the game from Address Library. It is of no relevance to this Project.
 - It is Adviced to add "VsDevCmd.bat" from Visual Studio to your Terminal (or) IDE to execute automatically to avoid cmake errors like the one mentioned below.This was a HUGE Headache for me. If you want to know more about "VsDevCmd.bat", Google is your Friend.
 ```
   The CMAKE_CXX_COMPILER:
