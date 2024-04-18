@@ -5,7 +5,7 @@ message("Using toolchain file ${CMAKE_TOOLCHAIN_FILE}.")
 ########################################################################################################################
 project(
         Ammo_Patcher
-        VERSION 1.0.0.2
+        VERSION 1.0.0.3
         DESCRIPTION "A simple SKSE plugin built with CommonLibSSE to patch AMMO"
         LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
@@ -146,3 +146,8 @@ foreach (DEPLOY_TARGET $ENV{SkyrimPluginTargets})    #set your "SkyrimPluginTarg
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/Configuration/My Config/${PROJECT_NAME}.json" "${DEPLOY_TARGET}/Common For ${PROJECT_NAME}/SKSE/Plugins/")
 endforeach()
+
+#adding a define for NDEBUG for future uses(if any)
+if(${CMAKE_BUILD_TYPE} STREQUAL Debug OR ${CMAKE_BUILD_TYPE} STREQUAL RelWithDebInfo)
+    add_definitions(-DNDEBUG)
+endif()
