@@ -118,3 +118,8 @@ namespace logger = SKSE::log;
 namespace util {
     using SKSE::stl::report_and_fail;
 }
+
+//for Future uses if any(leaving it here)
+//#ifdef NDEBUG
+//#include <spdlog/sinks/stdout_color_sinks.h>
+//#endif
