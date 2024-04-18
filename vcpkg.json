@@ -1,13 +1,11 @@
 {
     "name": "ammopatcher",
-    "version-string": "1.0.0.2",
+    "version-string": "1.0.0.3",
     "port-version": 0,
     "description": "A simple SKSE plugin to patch AMMO",
-    "homepage": "https://www.skyrimng.com",
     "license": "Apache-2.0",
     "dependencies": [
       "commonlibsse-ng",
-      "spdlog",
       "nlohmann-json"
     ]
 }
