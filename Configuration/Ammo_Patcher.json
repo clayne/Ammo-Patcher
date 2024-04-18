@@ -7,7 +7,7 @@
       "Enable Arrow Patch": true,
       "Change Gravity": {
         "Enable": true,
-        "Gravity": 0.0,
+        "Gravity": 0.0
       },
       "Change Speed": {
         "Enable": true,
