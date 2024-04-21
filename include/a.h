@@ -307,12 +307,12 @@ bool DumpSpecificVersionlibAsCSV() {
     VersionDblib db;
 
     
-    int ver[] = {317,318,323,342,353,629,640,659,1130};
+    int ver[] = {317,318,323,342,353,629,640,659,1130, 1170, 1179};
     int last_ver=((sizeof(ver)/sizeof(ver[0]))-1);
     
     for (int index =0; index <= last_ver; index++) {
         if (!db.Load(1, 6, ver[index], 0)) { // Try to load database of specified version regardless of running executable version.
-            SKSE::log::error("Failed to load database for 1.5.{}.0!", ver[index]);
+            SKSE::log::error("Failed to load database for 1.6.{}.0!", ver[index]);
         }else if (db.Load(1, 6, ver[index], 0)){
 
         // Write out a file called offsets-"version".txt where each line is the ID and offset.
@@ -327,12 +327,12 @@ bool DumpSpecificVersionlibAsTXT() {
     VersionDblib db;
 
     
-    int ver[] = {317,318,323,342,353,629,640,659,1130};
+    int ver[] = {317,318,323,342,353,629,640,659,1130, 1170, 1179};
     int last_ver=((sizeof(ver)/sizeof(ver[0]))-1);
     
     for (int index =0; index <= last_ver; index++) {
         if (!db.Load(1, 6, ver[index], 0)) { // Try to load database of specified version regardless of running executable version.
-            SKSE::log::error("Failed to load database for 1.5.{}.0!", ver[index]);
+            SKSE::log::error("Failed to load database for 1.6.{}.0!", ver[index]);
         }else if (db.Load(1, 6, ver[index], 0)){
 
         // Write out a file called offsets-"version".txt where each line is the ID and offset.
