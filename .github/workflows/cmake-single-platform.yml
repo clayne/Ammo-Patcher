@@ -8,7 +8,6 @@ on:
 
 env:
   VCPKG_ROOT: ${{ github.workspace }}\vcpkg
-  VCPKG_FEATURE_FLAGS: manifests
 
 jobs:
   build:
@@ -23,8 +22,8 @@ jobs:
     - name: Bootstrap VCPKG
       run: ${{github.workspace}}/vcpkg/bootstrap-vcpkg.bat
 
-    - name: run VCPKG in manifest m0de
-      run: vcpkg install --x-manifest-root=${{github.workspace}}/
+    - name: run VCPKG install
+      run: vcpkg install
         
     - name: Configure CMake Preset for "debug" preset
       run: cmake --preset debug
