@@ -24,16 +24,16 @@ jobs:
       with:
         vcpkgJsonGlob: '${{ github.workspace }}\vcpkg.json'
         
-    - name: Configure and Run CMake Preset for "debug" and "Debug" preset
+    - name: Configure and Run CMake Preset for "Debug" preset
       uses: lukka/run-cmake@v10
       with:
-        configurePreset: 'debug'
+        configurePreset: 'Debug'
         buildPreset: 'Debug'
 
-    - name: Configure and Run CMake Preset for "release" and "Release" preset
+    - name: Configure and Run CMake Preset for "Release" preset
       uses: lukka/run-cmake@v10
       with:
-        configurePreset: 'release'
+        configurePreset: 'Release'
         buildPreset: 'Release'
       
     - name: Deploy
