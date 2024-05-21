@@ -71,13 +71,13 @@
         {
             "name": "Debug",
             "displayName": "Debug",
-            "configurePreset": "debug",
+            "configurePreset": "Debug",
             "description": ""
         },
         {
             "name": "Release",
             "displayName": "Release",
-            "configurePreset": "release",
+            "configurePreset": "Release",
             "description": ""
         },
         {
