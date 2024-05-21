@@ -66,5 +66,19 @@
         "CMAKE_BUILD_TYPE": "MinSizeRel"
       }
     }
-  ]
+  ],
+    "buildPresets": [
+        {
+            "name": "Debug",
+            "displayName": "Debug",
+            "configurePreset": "debug",
+            "description": ""
+        },
+		{
+            "name": "Release",
+            "displayName": "Release",
+            "configurePreset": "release",
+            "description": ""
+        }
+    ]
 }
