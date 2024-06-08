@@ -172,3 +172,72 @@ set(TARGET_ZIP "${PROJECT_NAME}_${PROJECT_VERSION}.7z")
 ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME} POST_BUILD
 		COMMAND ${SEVEN_ZIP_EXECUTABLE} a -t7z -mx=9 "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Artifact/${TARGET_ZIP}" "${ZIP_DIR}/*" > ${OUTPUT_LOG}
 )
+
+
+# Define the workflow file path
+set(WORKFLOW_FILE "${CMAKE_SOURCE_DIR}/.github/workflows/CMake SKSE Setup.yml")
+
+set(WORKFLOW_FILE_DATA 
+    "name: CMake SKSE Setup\n"
+    "\n"
+    "on:\n"
+    "  push:\n"
+    "    branches: \[ \"main\" \]\n"
+    "\n"
+    "env:\n"
+    "  VCPKG_ROOT: $\{\{ github.workspace \}\}/vcpkg\n"
+    "  PROJECT_NAME: ${PROJECT_NAME}\n"
+    "  PROJECT_VERSION: ${PROJECT_VERSION}\n"
+    "\n " 
+    "\n"
+    "jobs:\n"
+    "  build:\n"
+    "    runs-on: windows-latest\n"
+    "\n"
+    "    steps:\n"
+    "    - uses: actions/checkout@v4\n"
+    "\n"
+    "    - name: Setup cmake\n"
+    "      uses: lukka/get-cmake@latest\n"
+    "\n"
+    "    - name: Restore from cache and setup vcpkg executable and data files.\n"
+    "      uses: lukka/run-vcpkg@v11\n"
+    "      with:\n"
+    "        vcpkgJsonGlob: '$\{\{ github.workspace \}\}/vcpkg.json'\n"
+    "\n"
+    "    - name: Configure and Run CMake Preset for \"Debug\" preset\n"
+    "      uses: lukka/run-cmake@v10\n"
+    "      with:\n"
+    "        configurePreset: 'Debug'\n"
+    "        buildPreset: 'Debug'\n"
+    "\n"
+    "    - name: Configure and Run CMake Preset for \"Release\" preset\n"
+    "      uses: lukka/run-cmake@v10\n"
+    "      with:\n"
+    "        configurePreset: \'Release\'\n"
+    "        buildPreset: \'Release\'\n"
+    "\n"
+    "    - name: Deploy Aritfact\n"
+    "      uses: actions/upload-artifact@v4.3.3\n"
+    "      with:\n"
+    "        path: $\{\{ github.workspace \}\}/contrib/Artifact/$\{\{ env.PROJECT_NAME \}\}_$\{\{ env.PROJECT_VERSION \}\}.7z\n"
+    "\n"
+    "    - name: Upload to Release\n"
+    "      uses: svenstaro/upload-release-action@v2\n"
+    "      with:\n"
+    "        repo_token: $\{\{ secrets.GITHUB_TOKEN \}\}\n"
+    "        file: $\{\{ github.workspace \}\}/contrib/Artifact/$\{\{ env.PROJECT_NAME \}\}_$\{\{ env.PROJECT_VERSION \}\}.7z\n"
+    "        overwrite: true\n"
+    "        tag: $\{\{ github.ref \}\}\n"
+    "        release_name: Release\n"
+    "        target_commit: main\n"
+    "\n"
+)
+
+# Check if the GitHub environment variable is defined
+if(DEFINED ENV{GITHUB_ENV})
+    message(STATUS "GitHub environment detected. Skipping workflow modification.")
+else()
+    message(STATUS "GitHub environment not detected. Executing workflow modification.")
+    file(WRITE ${WORKFLOW_FILE} ${WORKFLOW_FILE_DATA})
+endif()
