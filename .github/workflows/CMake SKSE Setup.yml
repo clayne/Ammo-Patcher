@@ -3,8 +3,6 @@ name: CMake SKSE Setup
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 env:
   VCPKG_ROOT: ${{ github.workspace }}\vcpkg
@@ -23,6 +21,13 @@ jobs:
       uses: lukka/run-vcpkg@v11
       with:
         vcpkgJsonGlob: '${{ github.workspace }}\vcpkg.json'
+
+    - name: CMake Project Version
+      id: cmake_version
+      uses: DarwinInnovation/cmake-project-version-action@v1.0
+      with:
+        path: '${{ github.workspace }}\CMakeLists.txt'
+            
         
     - name: Configure and Run CMake Preset for "Debug" preset
       uses: lukka/run-cmake@v10
@@ -36,11 +41,17 @@ jobs:
         configurePreset: 'Release'
         buildPreset: 'Release'
       
-    - name: Deploy
-      uses: actions/upload-artifact@v4
+    - name: Deploy Aritfact
+      uses: actions/upload-artifact@v4.3.3
       with:
-        name: Ammo_Patcher
-        path: ${{github.workspace}}/contrib/Distribution/
-        compression-level: 9
-        if-no-files-found: error
+        path: ${{github.workspace}}/contrib/Artifact/${{ steps.cmake_version.outputs.project }}_${{ steps.cmake_version.outputs.version }}.7z
 
+    - name: Upload to Release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ${{github.workspace}}/contrib/Artifact/${{ steps.cmake_version.outputs.project }}_${{ steps.cmake_version.outputs.version }}.7z
+        overwrite: true
+        tag: ${{ github.ref }}
+        release_name: Release
+        target_commit: main
