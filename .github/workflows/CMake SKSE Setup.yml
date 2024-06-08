@@ -13,6 +13,8 @@ env:
 jobs:
   build:
     runs-on: windows-latest
+    permissions:
+      contents: write
 
     steps:
     - uses: actions/checkout@v4
@@ -42,13 +44,15 @@ jobs:
       with:
         path: ${{ github.workspace }}/contrib/Artifact/${{ env.PROJECT_NAME }}_${{ env.PROJECT_VERSION }}.7z
 
-    - name: Upload to Release
-      uses: svenstaro/upload-release-action@v2
+    - name: Upload files to a GitHub release
+      uses: ncipollo/release-action@v1.14.0
       with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ${{ github.workspace }}/contrib/Artifact/${{ env.PROJECT_NAME }}_${{ env.PROJECT_VERSION }}.7z
-        overwrite: true
-        tag: ${{ github.ref }}
-        release_name: Release
-        target_commit: main
+        token: ${{ secrets.GITHUB_TOKEN }}
+        artifacts: ${{ github.workspace }}/contrib/Artifact/${{ env.PROJECT_NAME }}_${{ env.PROJECT_VERSION }}.7z
+        tag: Release
+        commit: main
+        generateReleaseNotes: true
+        allowUpdates: true
+        artifactErrorsFailBuild: true
+        makeLatest: "latest"
 
