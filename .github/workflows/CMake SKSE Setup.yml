@@ -55,4 +55,3 @@ jobs:
         artifactErrorsFailBuild: true
         makeLatest: "latest"
         name: ${{ env.PROJECT_NAME }} ${{ env.PROJECT_VERSION }}
-
