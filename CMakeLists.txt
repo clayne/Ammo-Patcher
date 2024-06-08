@@ -5,7 +5,7 @@ message("Using toolchain file ${CMAKE_TOOLCHAIN_FILE}.")
 ########################################################################################################################
 project(
         Ammo_Patcher
-        VERSION 1.0.0.3
+        VERSION 1.0.4
         DESCRIPTION "A simple SKSE plugin built with CommonLibSSE to patch AMMO"
         LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
@@ -23,22 +23,34 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
         cmake_policy(SET CMP0135 NEW)
 endif()
 
-set(headers 
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/a.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/s.h)
+# Add headers
+file(
+  GLOB_RECURSE
+  headers
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp
+)
+list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/include/PCH.h)
+list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/include/a.h)
+list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/include/s.h)
 
-set(sources
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/Main.cpp
-        ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
+# Add sources
+file(
+  GLOB_RECURSE
+  sources
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc
+  ${CMAKE_CURRENT_BINARY_DIR}/version.rc
+)
 
 set(tests )
 
 set(misc
-        CMakeLists.txt
-        CMakePresets.json
-        vcpkg-configuration.json
-        vcpkg.json
-        .clang-format)
+        ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt
+        ${CMAKE_CURRENT_SOURCE_DIR}/CMakePresets.json
+        ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg-configuration.json
+        ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg.json
+        ${CMAKE_CURRENT_SOURCE_DIR}/.clang-format)
 
 source_group(
         TREE ${CMAKE_CURRENT_SOURCE_DIR}
@@ -64,8 +76,14 @@ include(FetchContent)
 FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
 FetchContent_MakeAvailable(json)
 
-add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${headers} ${sources} ${misc})
+add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${headers} ${sources} ${misc} AUTHOR "Noname365")
 add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
+# Ensure 7z is available
+find_program(SEVEN_ZIP_EXECUTABLE NAMES 7z 7za)
+
+if(NOT SEVEN_ZIP_EXECUTABLE)
+    message(FATAL_ERROR "7-Zip (7z or 7za) not found. Please install 7-Zip.")
+endif()
 
 target_include_directories(${PROJECT_NAME}
         PRIVATE
@@ -80,13 +98,18 @@ target_include_directories(${PROJECT_NAME}
 
 target_precompile_headers(${PROJECT_NAME}
         PRIVATE
-        src/PCH.h)
+        include/PCH.h)
 
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 install(TARGETS ${PROJECT_NAME}
         DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+
+#adding a define for NDEBUG for future uses(if any)
+if(${CMAKE_BUILD_TYPE} STREQUAL Debug OR ${CMAKE_BUILD_TYPE} STREQUAL RelWithDebInfo)
+    add_definitions(-DNDEBUG)
+endif()
 
 
 ########################################################################################################################
@@ -105,14 +128,12 @@ endif()
 message("Build Type : ${CMAKE_BUILD_TYPE}")
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin - ${BUILD_NAME}/")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin - ${BUILD_NAME}/")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/Configuration/${PROJECT_NAME}.json" "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Common")
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin - ${BUILD_NAME}/"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${PROJECT_NAME}> "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin - ${BUILD_NAME}/"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/Configuration/${PROJECT_NAME}.json" "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Common")
 if(${CMAKE_BUILD_TYPE} STREQUAL Debug OR ${CMAKE_BUILD_TYPE} STREQUAL RelWithDebInfo)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PDB_FILE:${PROJECT_NAME}> "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin - ${BUILD_NAME}/")
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_PDB_FILE:${PROJECT_NAME}> "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin - ${BUILD_NAME}/")
 endif()
 file(GLOB_RECURSE OUTPUT_DLLS "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin - ${BUILD_NAME}/${PROJECT_NAME}.dll")
 if(${CMAKE_BUILD_TYPE} STREQUAL Debug OR ${CMAKE_BUILD_TYPE} STREQUAL RelWithDebInfo)
@@ -120,34 +141,34 @@ if(${CMAKE_BUILD_TYPE} STREQUAL Debug OR ${CMAKE_BUILD_TYPE} STREQUAL RelWithDeb
 endif()
 file(GLOB_RECURSE OUTPUT_JSONS "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Common/${PROJECT_NAME}.json")
 set_property(TARGET ${PROJECT_NAME}
-        APPEND PROPERTY ADDITIONAL_CLEAN_FILES "${OUTPUT_DLLS}")
+        APPEND PROPERTY ADDITIONAL_CLEAN_FILES "${OUTPUT_DLLS}"
+		APPEND PROPERTY ADDITIONAL_CLEAN_FILES "${OUTPUT_JSONS}")
 if(${CMAKE_BUILD_TYPE} STREQUAL Debug OR ${CMAKE_BUILD_TYPE} STREQUAL RelWithDebInfo)
     set_property(TARGET ${PROJECT_NAME}
             APPEND PROPERTY ADDITIONAL_CLEAN_FILES "${OUTPUT_PDBS}")
 endif()
-set_property(TARGET ${PROJECT_NAME}
-        APPEND PROPERTY ADDITIONAL_CLEAN_FILES "${OUTPUT_JSONS}")
 
 # Automatic deployment to Mod Organizer 2 mod directory.
 foreach (DEPLOY_TARGET $ENV{SkyrimPluginTargets})    #set your "SkyrimPluginTargets" environment variable to your MO2's Mods Folder
         message("Adding deployment target ${DEPLOY_TARGET}.")
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_TARGET}/${PROJECT_NAME} - ${CMAKE_BUILD_TYPE}/SKSE/Plugins/")
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> "${DEPLOY_TARGET}/${PROJECT_NAME} - ${CMAKE_BUILD_TYPE}/SKSE/Plugins/")
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_TARGET}/${PROJECT_NAME} - ${CMAKE_BUILD_TYPE}/SKSE/Plugins/"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${PROJECT_NAME}> "${DEPLOY_TARGET}/${PROJECT_NAME} - ${CMAKE_BUILD_TYPE}/SKSE/Plugins/")
         if(${CMAKE_BUILD_TYPE} STREQUAL Debug OR ${CMAKE_BUILD_TYPE} STREQUAL RelWithDebInfo)
                 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PDB_FILE:${PROJECT_NAME}> "${DEPLOY_TARGET}/${PROJECT_NAME} - ${CMAKE_BUILD_TYPE}/SKSE/Plugins/")
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_PDB_FILE:${PROJECT_NAME}> "${DEPLOY_TARGET}/${PROJECT_NAME} - ${CMAKE_BUILD_TYPE}/SKSE/Plugins/")
         endif()
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/Configuration/${PROJECT_NAME}.json" "${DEPLOY_TARGET}/${PROJECT_NAME} - ${CMAKE_BUILD_TYPE}/SKSE/Plugins/")
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_TARGET}/Common For ${PROJECT_NAME}/SKSE/Plugins/")
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/Configuration/My Config/${PROJECT_NAME}.json" "${DEPLOY_TARGET}/Common For ${PROJECT_NAME}/SKSE/Plugins/")
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/Configuration/${PROJECT_NAME}.json" "${DEPLOY_TARGET}/${PROJECT_NAME} - ${CMAKE_BUILD_TYPE}/SKSE/Plugins/"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_TARGET}/Common For ${PROJECT_NAME}/SKSE/Plugins/"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/Configuration/My Config/${PROJECT_NAME}.json" "${DEPLOY_TARGET}/Common For ${PROJECT_NAME}/SKSE/Plugins/")
 endforeach()
 
-#adding a define for NDEBUG for future uses(if any)
-if(${CMAKE_BUILD_TYPE} STREQUAL Debug OR ${CMAKE_BUILD_TYPE} STREQUAL RelWithDebInfo)
-    add_definitions(-DNDEBUG)
-endif()
+
+set(ZIP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution")
+set(OUTPUT_LOG "${CMAKE_CURRENT_SOURCE_DIR}/7z_output.log")
+set(TARGET_ZIP "${PROJECT_NAME}_${PROJECT_VERSION}.7z")
+
+ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME} POST_BUILD
+		COMMAND ${SEVEN_ZIP_EXECUTABLE} a -t7z -mx=9 "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Artifact/${TARGET_ZIP}" "${ZIP_DIR}/*" > ${OUTPUT_LOG}
+)
