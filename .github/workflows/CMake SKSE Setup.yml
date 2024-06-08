@@ -5,26 +5,26 @@ on:
     branches: [ "main" ]
 
 env:
-  VCPKG_ROOT: ${{ github.workspace }}\vcpkg
+  VCPKG_ROOT: ${{ github.workspace }}/vcpkg
   PROJECT_NAME: Ammo_Patcher
-  PROJECT_VERSION: 1.0.3
-  
+  PROJECT_VERSION: 1.0.4
 
+ 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup cmake
       uses: lukka/get-cmake@latest
-    
+
     - name: Restore from cache and setup vcpkg executable and data files.
       uses: lukka/run-vcpkg@v11
       with:
-        vcpkgJsonGlob: '${{ github.workspace }}\vcpkg.json'    
-        
+        vcpkgJsonGlob: '${{ github.workspace }}/vcpkg.json'
+
     - name: Configure and Run CMake Preset for "Debug" preset
       uses: lukka/run-cmake@v10
       with:
@@ -37,22 +37,18 @@ jobs:
         configurePreset: 'Release'
         buildPreset: 'Release'
 
-    - name: Set env variables
-      run: |
-          echo "PROJECT_NAME=$(cat ${{ github.workspace }}\project_name.txt)" >> $GITHUB_ENV
-          echo "PROJECT_VERSION=$(cat ${{ github.workspace }}\project_version.txt)" >> $GITHUB_ENV
-      
     - name: Deploy Aritfact
       uses: actions/upload-artifact@v4.3.3
       with:
-        path: ${{github.workspace}}\contrib\Artifact\${{ env.PROJECT_NAME }}_${{ env.PROJECT_VERSION }}.7z
+        path: ${{ github.workspace }}/contrib/Artifact/${{ env.PROJECT_NAME }}_${{ env.PROJECT_VERSION }}.7z
 
     - name: Upload to Release
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ${{github.workspace}}\contrib\Artifact\${{ env.PROJECT_NAME }}_${{ env.PROJECT_VERSION }}.7z
+        file: ${{ github.workspace }}/contrib/Artifact/${{ env.PROJECT_NAME }}_${{ env.PROJECT_VERSION }}.7z
         overwrite: true
         tag: ${{ github.ref }}
         release_name: Release
         target_commit: main
+
