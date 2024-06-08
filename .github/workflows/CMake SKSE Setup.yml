@@ -25,8 +25,6 @@ jobs:
     - name: CMake Project Version
       id: cmake_version
       uses: DarwinInnovation/cmake-project-version-action@v1.0
-      with:
-        path: '${{ github.workspace }}\CMakeLists.txt'
             
         
     - name: Configure and Run CMake Preset for "Debug" preset
