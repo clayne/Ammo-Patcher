@@ -5,7 +5,7 @@ message("Using toolchain file ${CMAKE_TOOLCHAIN_FILE}.")
 ########################################################################################################################
 project(
         Ammo_Patcher
-        VERSION 1.0.4
+        VERSION 1.0.5
         DESCRIPTION "A simple SKSE plugin built with CommonLibSSE to patch AMMO"
         LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)

@@ -46,7 +46,7 @@ RE::BSEventNotifyControl APEventProcessor::ProcessEvent(const RE::TESContainerCh
 		if (baseObj && oldCont && ui) {
 			RE::Actor* actor = oldCont->As<RE::Actor>();
 			if (actor) {
-				if ((actor->IsPlayerRef() && DataHandler::GetSingleton()->_InfinitePlayerAmmo) || (actor->IsPlayerTeammate() && DataHandler::GetSingleton()->_InfiniteTeammateAmmo)) {
+				if ((actor->IsPlayerRef() && DataHandler::GetSingleton()->_InfinitePlayerAmmo) || (actor->IsInFaction(RE::TESForm::LookupByID<RE::TESFaction>(0x0005C84E)) && DataHandler::GetSingleton()->_InfiniteTeammateAmmo)) {
 					if (!(
 							ui->IsMenuOpen(RE::GiftMenu::MENU_NAME) ||
 							ui->IsMenuOpen(RE::FavoritesMenu::MENU_NAME) ||
