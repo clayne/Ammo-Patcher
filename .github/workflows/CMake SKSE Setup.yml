@@ -6,7 +6,7 @@ on:
 
 env:
   PROJECT_NAME: Ammo_Patcher
-  PROJECT_VERSION: 1.0.5
+  PROJECT_VERSION: 1.0.6
 
 
 jobs:
@@ -51,7 +51,6 @@ jobs:
         tag: Release
         commit: main
         generateReleaseNotes: true
-        allowUpdates: true
         artifactErrorsFailBuild: true
         makeLatest: "latest"
         name: ${{ env.PROJECT_NAME }} ${{ env.PROJECT_VERSION }}

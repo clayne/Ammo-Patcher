@@ -1,5 +1,4 @@
 #include "DataHandler.h"
-#include "Events.h"
 #include "utils.h"
 
 DataHandler* DataHandler::GetSingleton()
@@ -84,9 +83,6 @@ void DataHandler::LoadJson()
 
 			_InfinitePlayerAmmo = _JsonData[data[0]][data[20]]["Player"].get<bool>();
 			_InfiniteTeammateAmmo = _JsonData[data[0]][data[20]]["Teammate"].get<bool>();
-
-			if (_InfinitePlayerAmmo || _InfiniteTeammateAmmo)
-				APEventProcessor::RegisterEvent();
 
 			if (_ArrowSoundLevelStr == data[15]) {
 				_ArrowSoundLevel = RE::SOUND_LEVEL::kLoud;
@@ -224,8 +220,8 @@ void DataHandler::ammo_patch()
 		for (const auto ammo : RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESAmmo>()) {
 			if (ammo) {
 				const char* starString = "******************************************************************************************************************************";
-				bool       shouldPatch = true;
-				const auto ammoProjectile = ammo->GetRuntimeData().data.projectile;
+				bool        shouldPatch = true;
+				const auto  ammoProjectile = ammo->GetRuntimeData().data.projectile;
 				if (ammoProjectile) {
 					shouldPatch = true;
 					if (_HasFilesToMerge) {

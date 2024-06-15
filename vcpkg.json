@@ -1,11 +1,11 @@
 {
-    "name": "ammopatcher",
-    "version-string": "1.0.0.3",
-    "port-version": 0,
-    "description": "A simple SKSE plugin to patch AMMO",
-    "license": "Apache-2.0",
-    "dependencies": [
-      "commonlibsse-ng",
-      "nlohmann-json"
-    ]
+  "name": "ammopatcher",
+  "version-string": "1.0.6.0",
+  "port-version": 0,
+  "description": "A simple SKSE plugin to patch AMMO",
+  "license": "Apache-2.0",
+  "dependencies": [
+    "commonlibsse-ng",
+    "nlohmann-json"
+  ]
 }

@@ -9,8 +9,6 @@ public:
 
 	void ammo_patch();
 
-	bool OptionInfiniteArrows() { return _InfinitePlayerAmmo; }
-
 private:
 	DataHandler() = default;
 	~DataHandler() = default;
@@ -19,16 +17,16 @@ private:
 	DataHandler& operator=(const DataHandler&) = delete;
 	DataHandler& operator=(DataHandler&&) = delete;
 
-	bool                     _ArrowPatch{ true };
-	bool                     _BoltPatch{ true };
-	bool                     _ArrowSpeedEnable{ true };
-	bool                     _BoltSpeedEnable{ true };
-	bool                     _ArrowGravityEnable{ true };
-	bool                     _BoltGravityEnable{ true };
+	bool _ArrowPatch{ true };
+	bool _BoltPatch{ true };
+	bool _ArrowSpeedEnable{ true };
+	bool _BoltSpeedEnable{ true };
+	bool _ArrowGravityEnable{ true };
+	bool _BoltGravityEnable{ true };
 
 public:
-	bool                     _InfinitePlayerAmmo{ false };
-	bool                     _InfiniteTeammateAmmo{ false };
+	bool _InfinitePlayerAmmo{ false };
+	bool _InfiniteTeammateAmmo{ false };
 
 private:
 	bool                     _LimitArrowSpeed{ false };

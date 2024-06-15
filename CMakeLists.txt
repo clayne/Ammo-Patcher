@@ -5,12 +5,14 @@ message("Using toolchain file ${CMAKE_TOOLCHAIN_FILE}.")
 ########################################################################################################################
 project(
         Ammo_Patcher
-        VERSION 1.0.5
+        VERSION 1.0.6
         DESCRIPTION "A simple SKSE plugin built with CommonLibSSE to patch AMMO"
         LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_DEBUG OFF)
+set(CMAKE_OPTIMIZE_DEPENDENCIES ON)
 
 include(GNUInstallDirs)
 
@@ -70,13 +72,15 @@ message("\tTests: ${BUILD_TESTS}")
 ########################################################################################################################
 ## Configure target DLL
 ########################################################################################################################
+set(PROJECT_AUTHOR "NoName365")
+
 find_package(CommonLibSSE CONFIG REQUIRED)
 include(FetchContent)
 
 FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
 FetchContent_MakeAvailable(json)
 
-add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${headers} ${sources} ${misc} AUTHOR "Noname365")
+add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${headers} ${sources} ${misc} AUTHOR ${PROJECT_AUTHOR})
 add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
 # Ensure 7z is available
 find_program(SEVEN_ZIP_EXECUTABLE NAMES 7z 7za)
@@ -173,6 +177,26 @@ ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME} POST_BUILD
 		COMMAND ${SEVEN_ZIP_EXECUTABLE} a -t7z -mx=9 "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Artifact/${TARGET_ZIP}" "${ZIP_DIR}/*" > ${OUTPUT_LOG}
 )
 
+set(FOMOD_INFO_DATA 
+"<fomod> \n"
+"	<Name>${PROJECT_NAME}</Name> \n"
+"	<Author>${PROJECT_AUTHOR}</Author> \n"
+"	<Version>${PROJECT_VERSION}</Version> \n"
+"	<Website>https://www.nexusmods.com/skyrimspecialedition/mods/109061/</Website> \n"
+"	<Description>A simple SKSE plugin to patch All AMMO.\n"
+"You can change the speed,gravity of arrows and bolts separately.\n"
+"You can also limit the speed of arrows and/or bolts between a maximum and a minimum value.\n"
+"You can also optionally have practically infinite AMMO for player or followers or both.(adds one arrow or bolt when shot, you will get a notification)</Description> \n"
+"	<Groups>\n"
+"		<element>Ammo</element>\n"
+"	</Groups> \n" 
+"</fomod> \n"
+)
+
+if(NOT DEFINED ENV{GITHUB_ENV})
+    file(WRITE "${ZIP_DIR}/fomod/info.xml" ${FOMOD_INFO_DATA})
+endif()
+
 
 # Define the workflow file path
 set(WORKFLOW_FILE "${CMAKE_SOURCE_DIR}/.github/workflows/CMake SKSE Setup.yml")
@@ -231,10 +255,9 @@ set(WORKFLOW_FILE_DATA
     "        tag: Release\n"
     "        commit: main\n"
     "        generateReleaseNotes: true\n"
-    "        allowUpdates: true\n"
     "        artifactErrorsFailBuild: true\n"
     "        makeLatest: \"latest\"\n"
-    "        name: $\{\{ env.PROJECT_NAME \}\} $\{\{ env.PROJECT_VERSION \}\}\n"
+    "        name: $\{\{ env.PROJECT_NAME \}\} $\{\{ env.PROJECT_VERSION \}\}"
     "\n"
 )
 

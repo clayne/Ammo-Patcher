@@ -2,17 +2,18 @@
 #include "Events.h"
 #include "logging.h"
 
-
 SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 {
 	auto startSPL = std::chrono::high_resolution_clock::now();
 	AP::InitializeLogging();
-
-	DataHandler::GetSingleton()->LoadJson();
 	SKSE::Init(a_skse);
+	DataHandler* d = DataHandler::GetSingleton();
+	d->LoadJson();
 
+	if (d->_InfinitePlayerAmmo || d->_InfiniteTeammateAmmo) {
+		APEventProcessor::RegisterEvent();
+	}
 	SKSEEvent::InitializeMessaging();
-
 	auto nanosecondsTakenForSPL = std::chrono::duration(std::chrono::high_resolution_clock::now() - startSPL);
 
 	logger::info("Time Taken in SKSEPluginLoad(const SKSE::LoadInterface* a_skse) totally is {} nanoseconds or {} microseconds or {} milliseconds or {} seconds or {} minutes", nanosecondsTakenForSPL.count(),

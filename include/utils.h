@@ -40,13 +40,14 @@ namespace Utils
 		// Call MessageBoxW with the confirmation message
 		switch (MessageBoxW(nullptr, confirmationMessage.c_str(), moduleName.c_str(), MB_YESNO | MB_ICONQUESTION)) {
 		case IDNO:
-			SKSE::WinAPI::TerminateProcess(SKSE::WinAPI::GetCurrentProcess(), EXIT_FAILURE);
+			TerminateProcess(GetCurrentProcess(), EXIT_FAILURE);
+			break;
 		default:
 			break;
 		}
 	}
 
-	static RE::FormID GetFormFromIdentifier(const std::string& identifier)
+	RE::FormID GetFormFromIdentifier(const std::string& identifier)
 	{
 		RE::TESDataHandler* dataHandler = RE::TESDataHandler::GetSingleton();
 		auto                delimiter = identifier.find('|');
