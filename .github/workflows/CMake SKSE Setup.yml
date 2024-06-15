@@ -54,3 +54,5 @@ jobs:
         artifactErrorsFailBuild: true
         makeLatest: "latest"
         name: ${{ env.PROJECT_NAME }} ${{ env.PROJECT_VERSION }}
+        allowUpdates: true # Allow updating existing releases
+        removeArtifacts: true # Remove existing artifacts before uploading new ones
