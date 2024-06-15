@@ -48,11 +48,9 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         artifacts: ${{ github.workspace }}/contrib/Artifact/${{ env.PROJECT_NAME }}_${{ env.PROJECT_VERSION }}.7z
-        tag: Release
+        tag: ${{ env.PROJECT_VERSION }}
         commit: main
         generateReleaseNotes: true
         artifactErrorsFailBuild: true
         makeLatest: "latest"
         name: ${{ env.PROJECT_NAME }} ${{ env.PROJECT_VERSION }}
-        allowUpdates: true # Allow updating existing releases
-        removeArtifacts: true # Remove existing artifacts before uploading new ones
