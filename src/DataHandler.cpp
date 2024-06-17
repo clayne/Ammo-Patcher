@@ -84,6 +84,8 @@ void DataHandler::LoadJson()
 			_InfinitePlayerAmmo = _JsonData[data[0]][data[20]]["Player"].get<bool>();
 			_InfiniteTeammateAmmo = _JsonData[data[0]][data[20]]["Teammate"].get<bool>();
 
+			_Done = true;
+
 			if (_ArrowSoundLevelStr == data[15]) {
 				_ArrowSoundLevel = RE::SOUND_LEVEL::kLoud;
 			} else if (_ArrowSoundLevelStr == data[16]) {

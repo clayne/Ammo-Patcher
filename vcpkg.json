@@ -1,11 +1,25 @@
 {
   "name": "ammopatcher",
-  "version-string": "1.0.6.0",
+  "version-string": "1.0.7.0",
   "port-version": 0,
   "description": "A simple SKSE plugin to patch AMMO",
   "license": "Apache-2.0",
   "dependencies": [
-    "commonlibsse-ng",
+    "fast-cpp-csv-parser",
+    "rsm-binary-io",
+    "simpleini",
+    "spdlog",
+    "xbyak",
+    "rapidcsv",
+    "directxmath",
+    "directxtk",
+    "boost-stl-interfaces",
     "nlohmann-json"
+  ],
+  "overrides": [
+    {
+      "name": "fmt",
+      "version": "9.1.0"
+    }
   ]
 }

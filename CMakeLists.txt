@@ -5,7 +5,7 @@ message("Using toolchain file ${CMAKE_TOOLCHAIN_FILE}.")
 ########################################################################################################################
 project(
         Ammo_Patcher
-        VERSION 1.0.6
+        VERSION 1.0.7
         DESCRIPTION "A simple SKSE plugin built with CommonLibSSE to patch AMMO"
         LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
@@ -74,7 +74,9 @@ message("\tTests: ${BUILD_TESTS}")
 ########################################################################################################################
 set(PROJECT_AUTHOR "NoName365")
 
-find_package(CommonLibSSE CONFIG REQUIRED)
+add_subdirectory($ENV{CommonLibSSEPath} CommonLibSSE-NG)
+include($ENV{CommonLibSSEPath}/cmake/CommonLibSSE.cmake)
+# find_package(CommonLibSSE CONFIG REQUIRED)
 include(FetchContent)
 
 FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
@@ -183,10 +185,11 @@ set(FOMOD_INFO_DATA
 "	<Author>${PROJECT_AUTHOR}</Author> \n"
 "	<Version>${PROJECT_VERSION}</Version> \n"
 "	<Website>https://www.nexusmods.com/skyrimspecialedition/mods/109061/</Website> \n"
-"	<Description>A simple SKSE plugin to patch All AMMO.\n"
+"	<Description>\n"
+"A simple SKSE plugin to patch All AMMO.\n"
 "You can change the speed,gravity of arrows and bolts separately.\n"
 "You can also limit the speed of arrows and/or bolts between a maximum and a minimum value.\n"
-"You can also optionally have practically infinite AMMO for player or followers or both.(adds one arrow or bolt when shot, you will get a notification)</Description> \n"
+"You can also optionally have practically infinite AMMO for player or followers or both.(adds one arrow or bolt when shot, you will get a notification)\n</Description> \n"
 "	<Groups>\n"
 "		<element>Ammo</element>\n"
 "	</Groups> \n" 
@@ -252,13 +255,12 @@ set(WORKFLOW_FILE_DATA
     "      with:\n"
     "        token: $\{\{ secrets.GITHUB_TOKEN \}\}\n"
     "        artifacts: $\{\{ github.workspace \}\}/contrib/Artifact/$\{\{ env.PROJECT_NAME \}\}_$\{\{ env.PROJECT_VERSION \}\}.7z\n"
-    "        tag: Release\n"
+    "        tag: $\{\{ env.PROJECT_VERSION \}\}\n"
     "        commit: main\n"
     "        generateReleaseNotes: true\n"
     "        artifactErrorsFailBuild: true\n"
     "        makeLatest: \"latest\"\n"
-    "        name: $\{\{ env.PROJECT_NAME \}\} $\{\{ env.PROJECT_VERSION \}\}"
-    "\n"
+    "        name: $\{\{ env.PROJECT_NAME \}\} $\{\{ env.PROJECT_VERSION \}\}\n"
 )
 
 # Check if the GitHub environment variable is defined
