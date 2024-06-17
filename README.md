@@ -14,7 +14,7 @@ A simple SKSE plugin to patch All AMMO at runtime. Supports All Runtimes.
 - [Visual Studio Community 2022](https://visualstudio.microsoft.com/)
   - Desktop development with C++
 - [CommonLibSSE-NG](https://github.com/CharmedBaryon/CommonLibSSE-NG)
-  - No Need To Install (or) Download Separately
+  - git clone it somewhere and save the directory as CommonLibSSEPath in Environment Variables
 - Recommended : [Visual Studio Code](https://code.visualstudio.com/0)
   - This is What I use
   
