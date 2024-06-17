@@ -1,15 +1,15 @@
-<fomod>
-	<Name>Ammo_Patcher</Name>
-	<Author>NoName365</Author>
-	<Version>1.0.6</Version>
-	<Website>https://www.nexusmods.com/skyrimspecialedition/mods/109061/</Website>
+<fomod> 
+	<Name>Ammo_Patcher</Name> 
+	<Author>NoName365</Author> 
+	<Version>1.0.7</Version> 
+	<Website>https://www.nexusmods.com/skyrimspecialedition/mods/109061/</Website> 
 	<Description>
-		A simple SKSE plugin to patch All AMMO.
-		You can change the speed,gravity of arrows and bolts separately.
-		You can also limit the speed of arrows and/or bolts between a maximum and a minimum value.
-		You can also optionally have practically infinite AMMO for player or followers or both.(adds one arrow or bolt when shot, you will get a notification)
-	</Description>
+A simple SKSE plugin to patch All AMMO.
+You can change the speed,gravity of arrows and bolts separately.
+You can also limit the speed of arrows and/or bolts between a maximum and a minimum value.
+You can also optionally have practically infinite AMMO for player or followers or both.(adds one arrow or bolt when shot, you will get a notification)
+</Description> 
 	<Groups>
 		<element>Ammo</element>
-	</Groups>
-</fomod>
+	</Groups> 
+</fomod> 

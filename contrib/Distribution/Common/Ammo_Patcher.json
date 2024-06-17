@@ -4,8 +4,8 @@
     },
     "AMMO": {
         "Infinite AMMO": {
-            "Player": true,
-            "Teammate": true
+            "Player": false,
+            "Teammate": false
         },
         "Arrow": {
             "Enable Arrow Patch": true,
