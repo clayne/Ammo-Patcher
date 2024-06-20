@@ -47,7 +47,7 @@ namespace Utils
 		}
 	}
 
-	RE::FormID GetFormFromIdentifier(const std::string& identifier)
+	static RE::FormID GetFormIDFromIdentifier(const std::string& identifier)
 	{
 		RE::TESDataHandler* dataHandler = RE::TESDataHandler::GetSingleton();
 		auto                delimiter = identifier.find('|');
@@ -64,9 +64,34 @@ namespace Utils
 		}
 		return (RE::FormID) nullptr;
 	}
+
+	static std::string GetStringFromFormIDAndModName(RE::FormID formID, RE::TESFile* File)
+	{
+		bool        isLight = File->recordFlags.all(RE::TESFile::RecordFlag::kSmallFile);
+		RE::FormID  FormID = isLight ? formID & 0xFFF : formID & 0xFFFFFF;
+		std::string identifier = std::format("{}|{:08X}", File->GetFilename(), FormID);
+		return identifier;
+	}
 }
 
 namespace InlineUtils
 {
-	inline float limitFloat(float value, float min_value, float max_value) { return (value < min_value) ? min_value : ((value > max_value) ? max_value : value); }
+	template <typename T>
+	inline void limit(T& value, T min_value, T max_value)
+	{
+		value = (value < min_value) ? min_value : ((value > max_value) ? max_value : value);
+	}
+
+	template <class T>
+	inline void RemoveAnyDuplicates(std::vector<T>& vec)
+	{
+		// Sort the vector
+		std::sort(vec.begin(), vec.end());
+
+		// Use std::unique to move duplicates to the end
+		auto last = std::unique(vec.begin(), vec.end());
+
+		// Erase the duplicates
+		vec.erase(last, vec.end());
+	}
 }
