@@ -59,11 +59,13 @@ private:
 	RE::SOUND_LEVEL _BoltSoundLevel{ RE::SOUND_LEVEL::kSilent };
 
 public:
-	const char* _FolderPath{ "Data/SKSE/Plugins/Ammo Patcher/" };
-
-	nJson _JsonData;   // used for main json file
-	nJson _MergeData;  // used to merge exclusion json files
+	const char*              _FolderPath{ "Data/SKSE/Plugins/Ammo Patcher/" };
+	nJson                    _AmmoInfo;  // store all AMMO info for exclusion files
+	std::vector<std::string> _AmmoModFiles;
+	std::mutex               _lock;
+	nJson                    _JsonData;   // used for main json file
+	nJson                    _MergeData;  // used to merge exclusion json files
 private:
-	std::vector<std::string> _FormIDArray;
-	std::vector<std::string> _TESFileArray;
+	std::unordered_set<std::string> _FormIDArray;
+	std::unordered_set<std::string> _TESFileArray;
 };

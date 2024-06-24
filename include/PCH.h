@@ -123,3 +123,9 @@ namespace util {
 
 namespace fs = std::filesystem;
 using nJson = nlohmann::json;
+
+// Extra Utility operator for size_t numbers
+constexpr size_t operator"" sz(unsigned long long x)
+{
+	return static_cast<size_t>(x);
+}

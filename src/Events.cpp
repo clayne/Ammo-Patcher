@@ -47,9 +47,11 @@ RE::BSEventNotifyControl APEventProcessor::ProcessEvent(const RE::TESContainerCh
 		RE::TESBoundObject* baseObj = RE::TESForm::LookupByID<RE::TESBoundObject>(e->baseObj);
 		RE::UI*             ui = RE::UI::GetSingleton();
 		if (baseObj && oldCont && ui && newCont == nullptr) {
-			RE::Actor* actor = oldCont->As<RE::Actor>();
+			RE::Actor*                  actor = oldCont->As<RE::Actor>();
+			DataHandler*                d = DataHandler::GetSingleton();
+			std::lock_guard<std::mutex> lock(d->_lock);
 			if (actor) {
-				if ((actor->IsPlayerRef() && DataHandler::GetSingleton()->_InfinitePlayerAmmo) || (actor->IsInFaction(RE::TESForm::LookupByID<RE::TESFaction>(0x0005C84E)) && DataHandler::GetSingleton()->_InfiniteTeammateAmmo)) {
+				if ((actor->IsPlayerRef() && d->_InfinitePlayerAmmo) || (actor->IsInFaction(RE::TESForm::LookupByID<RE::TESFaction>(0x0005C84E)) && d->_InfiniteTeammateAmmo)) {
 					if (!(
 							ui->IsMenuOpen(RE::GiftMenu::MENU_NAME) ||
 							ui->IsMenuOpen(RE::FavoritesMenu::MENU_NAME) ||

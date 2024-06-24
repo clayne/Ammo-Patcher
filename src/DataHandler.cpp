@@ -9,7 +9,8 @@ DataHandler* DataHandler::GetSingleton()
 
 void DataHandler::LoadJson()
 {
-	std::ifstream jsonfile(std::format("Data/SKSE/Plugins/{}.json", SKSE::PluginDeclaration::GetSingleton()->GetName()));
+	std::lock_guard<std::mutex> lock(_lock);
+	std::ifstream               jsonfile(std::format("Data/SKSE/Plugins/{}.json", SKSE::PluginDeclaration::GetSingleton()->GetName()));
 	try {
 		_JsonData = nJson::parse(jsonfile);  // used for parsing main json file
 	} catch (const nJson::parse_error& e) {
@@ -84,8 +85,6 @@ void DataHandler::LoadJson()
 			_InfinitePlayerAmmo = _JsonData[data[0]][data[20]]["Player"].get<bool>();
 			_InfiniteTeammateAmmo = _JsonData[data[0]][data[20]]["Teammate"].get<bool>();
 
-			_Done = true;
-
 			if (_ArrowSoundLevelStr == data[15]) {
 				_ArrowSoundLevel = RE::SOUND_LEVEL::kLoud;
 			} else if (_ArrowSoundLevelStr == data[16]) {
@@ -135,29 +134,16 @@ void DataHandler::LoadJson()
 
 					if (_MergeData[data1[0]].is_array() && _MergeData[data1[1]].is_array()) {
 						// Collect all elements into formIDArray
-						_FormIDArray.insert(_FormIDArray.end(), _MergeData[data1[0]].begin(), _MergeData[data1[1]].end());
+						for (const auto& a : _MergeData[data1[0]]) _FormIDArray.insert(a.get<std::string>());
 
 						// Collect all elements into _TESFileArray
-						_TESFileArray.insert(_TESFileArray.end(), _MergeData[data1[0]].begin(), _MergeData[data1[1]].end());
+						for (const auto& a : _MergeData[data1[1]]) _TESFileArray.insert(a.get<std::string>());
 					}
 
 					if (!_MergeData.empty() && !_MergeData.is_null())
 						_MergeData.clear();
 				}
 			}
-
-			if (!_FormIDArray.empty()) {
-				// Sort and remove duplicates from formIDArray
-				std::sort(_FormIDArray.begin(), _FormIDArray.end());
-				_FormIDArray.erase(std::unique(_FormIDArray.begin(), _FormIDArray.end()), _FormIDArray.end());
-			}
-
-			if (!_TESFileArray.empty()) {
-				// Sort and remove duplicates from _TESFileArray
-				std::sort(_TESFileArray.begin(), _TESFileArray.end());
-				_TESFileArray.erase(std::unique(_TESFileArray.begin(), _TESFileArray.end()), _TESFileArray.end());
-			}
-
 			// debug("formIDArray : \n{}",formIDArray.dump(4));
 			// debug("_TESFileArray : \n{}",_TESFileArray.dump(4));
 		} else
@@ -216,15 +202,32 @@ void DataHandler::LoadJson()
 
 void DataHandler::ammo_patch()
 {
-	auto startAP = std::chrono::high_resolution_clock::now();
-	if (_ArrowPatch || _BoltPatch) {
-		logger::info("{} {} is starting to patch", SKSE::PluginDeclaration::GetSingleton()->GetName(), SKSE::PluginDeclaration::GetSingleton()->GetVersion());
-		for (const auto ammo : RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESAmmo>()) {
-			if (ammo) {
-				const char* starString = "******************************************************************************************************************************";
-				bool        shouldPatch = true;
-				const auto  ammoProjectile = ammo->GetRuntimeData().data.projectile;
-				if (ammoProjectile) {
+	std::lock_guard<std::mutex>           lock(_lock);
+	std::chrono::steady_clock::time_point startAP = std::chrono::high_resolution_clock::now();
+	logger::info("{} {} is starting to patch", SKSE::PluginDeclaration::GetSingleton()->GetName(), SKSE::PluginDeclaration::GetSingleton()->GetVersion());
+	nJson j;
+	for (const auto ammo : RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESAmmo>()) {
+		if (ammo) {
+			const char* starString = "******************************************************************************************************************************";
+			bool        shouldPatch = true;
+			j.clear();
+			j["ModName"] = ammo->GetFile()->GetFilename();                                                  //ModName
+			j["AmmoName"] = ammo->GetFullName();                                                            //AmmoName
+			j["AmmoFormID"] = ammo->GetRawFormID();                                                         //AmmoFormID
+			j["AmmoString"] = Utils::GetStringFromFormIDAndModName(ammo->GetRawFormID(), ammo->GetFile());  //AmmoString
+			//j["AmmoDamage"] = ammo->GetRuntimeData().data.damage; //AmmoDamage
+			//j["ProjName"] = nullptr; //ProjName
+			//j["ProjFormID"] = nullptr;  //ProjFormID
+			//j["ProjSpeed"] = nullptr;   //ProjSpeed
+			//j["ProjGravity"] = nullptr;  //ProjGravity
+
+			const auto ammoProjectile = ammo->GetRuntimeData().data.projectile;
+			if (ammoProjectile) {
+				//j["ProjName"] = ammoProjectile->GetFullName();  //ProjName
+				//j["ProjFormID"] = ammoProjectile->GetRawFormID();  //ProjFormID
+				//j["ProjSpeed"] = ammoProjectile->data.speed;   //ProjSpeed
+				//j["ProjGravity"] = ammoProjectile->data.gravity;  //ProjGravity
+				if (_ArrowPatch || _BoltPatch) {
 					shouldPatch = true;
 					if (_HasFilesToMerge) {
 						for (const auto& ammoModName : _TESFileArray) {
@@ -240,7 +243,7 @@ void DataHandler::ammo_patch()
 						}
 						if (shouldPatch) {
 							for (const auto& ammoFormID : _FormIDArray) {
-								if (auto form = Utils::GetFormFromIdentifier(ammoFormID); form)
+								if (auto form = Utils::GetFormIDFromIdentifier(ammoFormID); form)
 									if (ammo->GetFormID() == form) {
 										shouldPatch = false;
 										logger::debug("{}", starString);
@@ -278,11 +281,11 @@ void DataHandler::ammo_patch()
 										logger::debug("Changed Arrow Gravity");
 									}
 									if (_LimitArrowDamage) {  // limit damage
-										ammo->GetRuntimeData().data.damage = InlineUtils::limitFloat(ammo->GetRuntimeData().data.damage, _ArrowDamageLimiterMin, _ArrowDamageLimiterMax);
+										InlineUtils::limit(ammo->GetRuntimeData().data.damage, _ArrowDamageLimiterMin, _ArrowDamageLimiterMax);
 										logger::debug("Limited Arrow Damage");
 									}
 									if (_LimitArrowSpeed) {  // limit speed
-										ammoProjectile->data.speed = InlineUtils::limitFloat(ammoProjectile->data.speed, _ArrowSpeedLimiterMin, _ArrowSpeedLimiterMax);
+										InlineUtils::limit(ammoProjectile->data.speed, _ArrowSpeedLimiterMin, _ArrowSpeedLimiterMax);
 										logger::debug("Limited Arrow Level");
 									}
 								}
@@ -303,11 +306,11 @@ void DataHandler::ammo_patch()
 										logger::debug("Changed Bolt Speed");
 									}
 									if (_LimitBoltSpeed) {  // limit speed of bolt
-										ammoProjectile->data.speed = InlineUtils::limitFloat(ammoProjectile->data.speed, _BoltSpeedLimiterMin, _BoltSpeedLimiterMax);
+										InlineUtils::limit(ammoProjectile->data.speed, _BoltSpeedLimiterMin, _BoltSpeedLimiterMax);
 										logger::debug("Limited Bolt Speed");
 									}
 									if (_LimitBoltDamage) {  // limit damage of bolt
-										ammo->GetRuntimeData().data.damage = InlineUtils::limitFloat(ammo->GetRuntimeData().data.damage, _BoltDamageLimiterMin, _BoltDamageLimiterMax);
+										InlineUtils::limit(ammo->GetRuntimeData().data.damage, _BoltDamageLimiterMin, _BoltDamageLimiterMax);
 										logger::debug("Limited Bolt Damage");
 									}
 								}
@@ -320,19 +323,28 @@ void DataHandler::ammo_patch()
 							}
 						}
 					}
-				} else
-					logger::info("PROJ Record for {} with FormID {:08X} from file {} is NULL", ammo->GetFullName(), ammo->GetRawFormID(), ammo->GetFile()->GetFilename());
+				}
 			} else
-				logger::debug("This Iteration's Ammo is nullptr");
+				logger::info("PROJ Record for {} with FormID {:08X} from file {} is NULL", ammo->GetFullName(), ammo->GetRawFormID(), ammo->GetFile()->GetFilename());
+			_AmmoInfo.push_back(j);
 		}
-		logger::info("{} {} has finished Patching", SKSE::PluginDeclaration::GetSingleton()->GetName(), SKSE::PluginDeclaration::GetSingleton()->GetVersion());
-		if (!_FormIDArray.empty())
-			_FormIDArray.clear();
-		if (!_TESFileArray.empty())
-			_TESFileArray.clear();
-	} else
-		logger::info("Not Patching");
-	auto nanosecondsTakenForAP = std::chrono::duration(std::chrono::high_resolution_clock::now() - startAP);
+	}
+	logger::info("{} {} has finished Patching", SKSE::PluginDeclaration::GetSingleton()->GetName(), SKSE::PluginDeclaration::GetSingleton()->GetVersion());
+	if (!_FormIDArray.empty())
+		_FormIDArray.clear();
+	if (!_TESFileArray.empty())
+		_TESFileArray.clear();
+	j.clear();
+
+	for (auto& item : _AmmoInfo) _AmmoModFiles.push_back(item["ModName"].get<std::string>());
+
+	InlineUtils::RemoveAnyDuplicates(_AmmoModFiles);
+
+	_Done = true;
+
+	logger::debug("\n{}", _AmmoInfo.dump(4));
+
+	std::chrono::nanoseconds nanosecondsTakenForAP = std::chrono::duration(std::chrono::high_resolution_clock::now() - startAP);
 	logger::info("Time Taken in ammo_patch() totally is {} nanoseconds or {} microseconds or {} milliseconds or {} seconds or {} minutes", nanosecondsTakenForAP.count(),
 		std::chrono::duration_cast<std::chrono::microseconds>(nanosecondsTakenForAP).count(), std::chrono::duration_cast<std::chrono::milliseconds>(nanosecondsTakenForAP).count(),
 		std::chrono::duration_cast<std::chrono::seconds>(nanosecondsTakenForAP).count(), std::chrono::duration_cast<std::chrono::minutes>(nanosecondsTakenForAP).count());
