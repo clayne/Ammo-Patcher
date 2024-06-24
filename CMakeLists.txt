@@ -74,9 +74,9 @@ message("\tTests: ${BUILD_TESTS}")
 ########################################################################################################################
 set(PROJECT_AUTHOR "NoName365")
 
-add_subdirectory($ENV{CommonLibSSEPath} CommonLibSSE-NG)
-include($ENV{CommonLibSSEPath}/cmake/CommonLibSSE.cmake)
-# find_package(CommonLibSSE CONFIG REQUIRED)
+# add_subdirectory($ENV{CommonLibSSEPath} CommonLibSSE-NG)
+# include($ENV{CommonLibSSEPath}/cmake/CommonLibSSE.cmake)
+find_package(CommonLibSSE CONFIG REQUIRED)
 include(FetchContent)
 
 FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
