@@ -3,11 +3,35 @@ message("Using toolchain file ${CMAKE_TOOLCHAIN_FILE}.")
 ########################################################################################################################
 ## Define project
 ########################################################################################################################
+
+set(CURRENT_PROJECT_MAJOR_VER 1) # Change When Needed
+set(CURRENT_PROJECT_MINOR_VER 1) # Change When Needed
+set(CURRENT_PROJECT_PATCH_VER 0) # Change When Needed
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CURRENT_BUILD_TYPE "Debug")
+    set(CURRENT_PROJECT_BUILD_VER 1)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(CURRENT_BUILD_TYPE "Release")
+    set(CURRENT_PROJECT_BUILD_VER 0)
+elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    set(CURRENT_BUILD_TYPE "RelWithDebInfo")
+    set(CURRENT_PROJECT_BUILD_VER 2)
+elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+    set(CURRENT_BUILD_TYPE "MinSizeRel")
+    set(CURRENT_PROJECT_BUILD_VER 3)
+endif()
+
+message(STATUS "Build Type : ${CMAKE_BUILD_TYPE}")
+
 project(
         Ammo_Patcher
-        VERSION 1.0.8
+        VERSION "${CURRENT_PROJECT_MAJOR_VER}.${CURRENT_PROJECT_MINOR_VER}.${CURRENT_PROJECT_PATCH_VER}.${CURRENT_PROJECT_BUILD_VER}"
         DESCRIPTION "A simple SKSE plugin built with CommonLibSSE to patch AMMO"
         LANGUAGES CXX)
+
+message(STATUS "Version: ${PROJECT_VERSION}")
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
@@ -122,33 +146,26 @@ endif()
 ## Automatic plugin deployment
 ########################################################################################################################
 # Automatic deployment to FOMOD directory.
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(BUILD_NAME "Debug")
-    elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-        set(BUILD_NAME "Release")
-        elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-            set(BUILD_NAME "RelWithDebInfo")
-                elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
-                    set(BUILD_NAME "MinSizeRel")
-endif()
-message("Build Type : ${CMAKE_BUILD_TYPE}")
+set(CONTRIB_PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin - ${CURRENT_BUILD_TYPE}/")
+set(CONTRIB_CONFIGURATION_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Configuration/")
+set(CONTRIB_COMMON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Common/")
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin - ${BUILD_NAME}/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${PROJECT_NAME}> "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin - ${BUILD_NAME}/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/Configuration/${PROJECT_NAME}.json" "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Common"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/Configuration/ExclusionHint.json" "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Common"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/Configuration/MainHint.json" "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Common")
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CONTRIB_PROJECT_DIR}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${PROJECT_NAME}> "${CONTRIB_PROJECT_DIR}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CONTRIB_CONFIGURATION_DIR}/${PROJECT_NAME}.json" "${CONTRIB_COMMON_DIR}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CONTRIB_CONFIGURATION_DIR}/ExclusionHint.json" "${CONTRIB_COMMON_DIR}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CONTRIB_CONFIGURATION_DIR}/MainHint.json" "${CONTRIB_COMMON_DIR}")
 
 if(${CMAKE_BUILD_TYPE} STREQUAL Debug OR ${CMAKE_BUILD_TYPE} STREQUAL RelWithDebInfo)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_PDB_FILE:${PROJECT_NAME}> "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin - ${BUILD_NAME}/")
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_PDB_FILE:${PROJECT_NAME}> "${CONTRIB_PROJECT_DIR}")
 endif()
-file(GLOB_RECURSE OUTPUT_DLLS "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin - ${BUILD_NAME}/${PROJECT_NAME}.dll")
+file(GLOB_RECURSE OUTPUT_DLLS "${CONTRIB_PROJECT_DIR}/${PROJECT_NAME}.dll")
 if(${CMAKE_BUILD_TYPE} STREQUAL Debug OR ${CMAKE_BUILD_TYPE} STREQUAL RelWithDebInfo)
-    file(GLOB_RECURSE OUTPUT_PDBS "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Plugin - ${BUILD_NAME}/${PROJECT_NAME}.pdb")
+    file(GLOB_RECURSE OUTPUT_PDBS "${CONTRIB_PROJECT_DIR}/${PROJECT_NAME}.pdb")
 endif()
-file(GLOB_RECURSE OUTPUT_JSONS "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution/Common/**.json")
+file(GLOB_RECURSE OUTPUT_JSONS "${CONTRIB_COMMON_DIR}/**.json")
 set_property(TARGET ${PROJECT_NAME}
         APPEND PROPERTY ADDITIONAL_CLEAN_FILES "${OUTPUT_DLLS}"
 		APPEND PROPERTY ADDITIONAL_CLEAN_FILES "${OUTPUT_JSONS}")
@@ -159,26 +176,28 @@ endif()
 
 # Automatic deployment to Mod Organizer 2 mod directory.
 foreach (DEPLOY_TARGET $ENV{SkyrimPluginTargets})    #set your "SkyrimPluginTargets" environment variable to your MO2's Mods Folder
+        set(DEPLOY_TARGET_COMMON_DIR "${DEPLOY_TARGET}/${PROJECT_NAME} - ${CMAKE_BUILD_TYPE}/SKSE/Plugins/")        
+
         message("Adding deployment target ${DEPLOY_TARGET}.")
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_TARGET}/${PROJECT_NAME} - ${CMAKE_BUILD_TYPE}/SKSE/Plugins/"
-            COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_TARGET}/${PROJECT_NAME} - ${CMAKE_BUILD_TYPE}/SKSE/Plugins/Ammo Patcher Hints/"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/Configuration/ExclusionHint.json" "${DEPLOY_TARGET}/${PROJECT_NAME} - ${CMAKE_BUILD_TYPE}/SKSE/Plugins/Ammo Patcher Hints/"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/Configuration/MainHint.json" "${DEPLOY_TARGET}/${PROJECT_NAME} - ${CMAKE_BUILD_TYPE}/SKSE/Plugins/Ammo Patcher Hints/"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${PROJECT_NAME}> "${DEPLOY_TARGET}/${PROJECT_NAME} - ${CMAKE_BUILD_TYPE}/SKSE/Plugins/"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/Configuration/${PROJECT_NAME}.json" "${DEPLOY_TARGET}/${PROJECT_NAME} - ${CMAKE_BUILD_TYPE}/SKSE/Plugins/"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_TARGET_COMMON_DIR}"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_TARGET_COMMON_DIR}/Ammo Patcher Hints/"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CONTRIB_CONFIGURATION_DIR}/ExclusionHint.json" "${DEPLOY_TARGET_COMMON_DIR}/Ammo Patcher Hints/"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CONTRIB_CONFIGURATION_DIR}/MainHint.json" "${DEPLOY_TARGET_COMMON_DIR}/Ammo Patcher Hints/"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${PROJECT_NAME}> "${DEPLOY_TARGET_COMMON_DIR}/"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CONTRIB_CONFIGURATION_DIR}/${PROJECT_NAME}.json" "${DEPLOY_TARGET_COMMON_DIR}"
             COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_TARGET}/Common For ${PROJECT_NAME}/SKSE/Plugins/"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/Configuration/My Config/${PROJECT_NAME}.json" "${DEPLOY_TARGET}/Common For ${PROJECT_NAME}/SKSE/Plugins/")
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CONTRIB_CONFIGURATION_DIR}/My Config/${PROJECT_NAME}.json" "${DEPLOY_TARGET}/Common For ${PROJECT_NAME}/SKSE/Plugins/")
         if(${CMAKE_BUILD_TYPE} STREQUAL Debug OR ${CMAKE_BUILD_TYPE} STREQUAL RelWithDebInfo)
                 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_PDB_FILE:${PROJECT_NAME}> "${DEPLOY_TARGET}/${PROJECT_NAME} - ${CMAKE_BUILD_TYPE}/SKSE/Plugins/")
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_PDB_FILE:${PROJECT_NAME}> "${DEPLOY_TARGET_COMMON_DIR}/")
         endif()
 endforeach()
 
 
 set(ZIP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Distribution")
 set(OUTPUT_LOG "${CMAKE_CURRENT_SOURCE_DIR}/7z_output.log")
-set(TARGET_ZIP "${PROJECT_NAME}_${PROJECT_VERSION}.7z")
+set(TARGET_ZIP "${PROJECT_NAME}_${CURRENT_PROJECT_MAJOR_VER}.${CURRENT_PROJECT_MINOR_VER}.${CURRENT_PROJECT_PATCH_VER}.7z")
 
 ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME} POST_BUILD
 		COMMAND ${SEVEN_ZIP_EXECUTABLE} a -t7z -mx=9 "${CMAKE_CURRENT_SOURCE_DIR}/contrib/Artifact/${TARGET_ZIP}" "${ZIP_DIR}/*" > ${OUTPUT_LOG}
@@ -188,7 +207,7 @@ set(FOMOD_INFO_DATA
 "<fomod> \n"
 "	<Name>${PROJECT_NAME}</Name> \n"
 "	<Author>${PROJECT_AUTHOR}</Author> \n"
-"	<Version>${PROJECT_VERSION}</Version> \n"
+"	<Version>${CURRENT_PROJECT_MAJOR_VER}.${CURRENT_PROJECT_MINOR_VER}.${CURRENT_PROJECT_PATCH_VER}</Version> \n"
 "	<Website>https://www.nexusmods.com/skyrimspecialedition/mods/109061/</Website> \n"
 "	<Description>\n"
 "A simple SKSE plugin to patch All AMMO.\n"
@@ -218,7 +237,7 @@ set(WORKFLOW_FILE_DATA
     "\n"
     "env:\n"
     "  PROJECT_NAME: ${PROJECT_NAME}\n"
-    "  PROJECT_VERSION: ${PROJECT_VERSION}\n"
+    "  PROJECT_VERSION: ${CURRENT_PROJECT_MAJOR_VER}.${CURRENT_PROJECT_MINOR_VER}.${CURRENT_PROJECT_PATCH_VER}\n"
     "\n"
     "\n"
     "jobs:\n"

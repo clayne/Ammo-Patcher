@@ -130,7 +130,7 @@ void DataHandler::LoadJson()
 					}
 					logger::debug("Loaded JSON from file: {}", entry.path().generic_string());
 
-					const char* data1[2] = { "AMMO FormID to Exclude", "AMMO FormID to Exclude" };
+					const char* data1[2] = { "AMMO FormID to Exclude", "Mod File(s) to Exclude" };
 
 					if (_MergeData[data1[0]].is_array() && _MergeData[data1[1]].is_array()) {
 						// Collect all elements into formIDArray
@@ -342,7 +342,7 @@ void DataHandler::ammo_patch()
 
 	_Done = true;
 
-	logger::debug("\n{}", _AmmoInfo.dump(4));
+	/*logger::debug("\n{}", _AmmoInfo.dump(4));*/
 
 	std::chrono::nanoseconds nanosecondsTakenForAP = std::chrono::duration(std::chrono::high_resolution_clock::now() - startAP);
 	logger::info("Time Taken in ammo_patch() totally is {} nanoseconds or {} microseconds or {} milliseconds or {} seconds or {} minutes", nanosecondsTakenForAP.count(),
